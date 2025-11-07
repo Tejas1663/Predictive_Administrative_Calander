@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: predictive-administrative-calendar
+    repo: https://github.com/Tejas1663/Predictive_Administrative_Calander
+    branch: main
+    env: python
+    plan: free
+    buildCommand: |
+      git lfs install || true
+      git lfs pull --include="xgb_event_model.pkl" || true
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: MODEL_FILE
+        value: xgb_event_model.pkl
+      - key: FLASK_ENV
+        value: production
+    autoDeploy: true
+    healthCheckPath: /
