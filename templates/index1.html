@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Prediction</title>
+    <style>
+        body { font-family: Arial; text-align: center; margin-top: 50px; }
+        input, select { padding: 10px; margin: 5px; width: 220px; }
+        button { padding: 10px 20px; margin-top: 10px; cursor: pointer; }
+        .result { margin-top: 20px; font-size: 1.2em; font-weight: bold; color: green; }
+        .chart-container { 
+            margin-top: 30px; 
+            max-width: 600px; 
+            margin-left: auto; 
+            margin-right: auto; 
+            height: 400px;
+            position: relative;
+        }
+        .info-section { margin-top: 20px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
+        .severity-high { color: red; }
+        .severity-medium { color: orange; }
+        .severity-low { color: green; }
+        .emergency { font-weight: bold; }
+        .debug-info { 
+            background-color: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 4px; 
+            text-align: left;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Predict Event</h1>
+    <form method="post">
+        <!-- Date Picker -->
+        <input type="date" name="date" required><br>
+
+        <!-- Location Dropdown -->
+        <select name="location" required>
+            <option value="">Select Location</option>
+            {% for loc in locations %}
+                <option value="{{ loc }}">{{ loc }}</option>
+            {% endfor %}
+        </select><br>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if prediction %}
+        <div class="result">✅ Predicted Event: {{ prediction }}</div>
+        
+        <!-- Debug Information -->
+        <div class="debug-info" id="debugInfo">
+            Debug: Prediction received - {{ prediction }}
+        </div>
+        
+        <!-- Visualization Section -->
+        <div class="chart-container">
+            <canvas id="eventChart" width="600" height="400"></canvas>
+        </div>
+        
+        <!-- Event Information Section -->
+        <div class="info-section">
+            <h3>Event Information</h3>
+            <p><strong>Severity:</strong> <span class="severity-{{ severity.lower() }}">{{ severity }}</span></p>
+            <p><strong>Emergency Number:</strong> <span class="emergency">{{ emergency_number }}</span></p>
+            <p><strong>Precaution:</strong> {{ precaution }}</p>
+            
+            <h4>Recommendations:</h4>
+            <ul>
+                {% for rec in recommendation %}
+                    <li>{{ rec }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <script>
+            // Wait for DOM to be fully loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                const debugInfo = document.getElementById('debugInfo');
+                
+                try {
+                    debugInfo.innerHTML += '<br>Debug: DOM loaded';
+                    
+                    // Check if Chart is available
+                    if (typeof Chart === 'undefined') {
+                        debugInfo.innerHTML += '<br>Error: Chart.js library not loaded';
+                        return;
+                    }
+                    
+                    debugInfo.innerHTML += '<br>Debug: Chart.js library loaded';
+                    
+                    // Get canvas context
+                    const canvas = document.getElementById('eventChart');
+                    if (!canvas) {
+                        debugInfo.innerHTML += '<br>Error: Canvas element not found';
+                        return;
+                    }
+                    
+                    const ctx = canvas.getContext('2d');
+                    debugInfo.innerHTML += '<br>Debug: Canvas context obtained';
+                    
+                    // Generate random chart type
+                    const chartTypes = ['bar', 'line', 'pie', 'doughnut', 'radar', 'polarArea'];
+                    const randomChartType = chartTypes[Math.floor(Math.random() * chartTypes.length)];
+                    debugInfo.innerHTML += '<br>Debug: Chart type selected - ' + randomChartType;
+                    
+                    // Generate random data based on prediction
+                    const prediction = "{{ prediction }}";
+                    const labels = generateLabels(randomChartType, prediction);
+                    const data = generateData(randomChartType, labels.length);
+                    const colors = generateColors(labels.length);
+                    
+                    debugInfo.innerHTML += '<br>Debug: Data generated - ' + JSON.stringify({labels: labels, data: data});
+                    
+                    // Create chart
+                    const chart = new Chart(ctx, {
+                        type: randomChartType,
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: `Analysis for ${prediction}`,
+                                data: data,
+                                backgroundColor: colors.bg,
+                                borderColor: colors.border,
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `Event Analysis: ${prediction}`
+                                },
+                                legend: {
+                                    display: randomChartType === 'pie' || randomChartType === 'doughnut'
+                                }
+                            },
+                            scales: (randomChartType === 'bar' || randomChartType === 'line') ? {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            } : {}
+                        }
+                    });
+                    
+                    debugInfo.innerHTML += '<br>Debug: Chart created successfully';
+                    
+                } catch (error) {
+                    debugInfo.innerHTML += '<br>Error: ' + error.message;
+                    console.error('Chart creation error:', error);
+                }
+            });
+            
+            function generateLabels(chartType, prediction) {
+                if (chartType === 'pie' || chartType === 'doughnut') {
+                    return ['Factor A', 'Factor B', 'Factor C', 'Factor D', 'Factor E'];
+                } else if (chartType === 'radar' || chartType === 'polarArea') {
+                    return ['Risk Level', 'Impact', 'Probability', 'Duration', 'Affected Area', 'Recovery Time'];
+                } else {
+                    // For bar and line charts
+                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const currentMonth = new Date().getMonth();
+                    return months.slice(currentMonth - 5, currentMonth + 1);
+                }
+            }
+            
+            function generateData(chartType, length) {
+                const data = [];
+                for (let i = 0; i < length; i++) {
+                    data.push(Math.floor(Math.random() * 100) + 1);
+                }
+                return data;
+            }
+            
+            function generateColors(length) {
+                const bgColors = [];
+                const borderColors = [];
+                
+                for (let i = 0; i < length; i++) {
+                    const r = Math.floor(Math.random() * 200) + 55;
+                    const g = Math.floor(Math.random() * 200) + 55;
+                    const b = Math.floor(Math.random() * 200) + 55;
+                    
+                    bgColors.push(`rgba(${r}, ${g}, ${b}, 0.2)`);
+                    borderColors.push(`rgba(${r}, ${g}, ${b}, 1)`);
+                }
+                
+                return {
+                    bg: bgColors,
+                    border: borderColors
+                };
+            }
+        </script>
+    {% endif %}
+</body>
+</html>
