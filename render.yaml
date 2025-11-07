@@ -9,7 +9,7 @@ services:
       git lfs install || true
       git lfs pull --include="xgb_event_model.pkl" || true
       python -m pip install --upgrade pip
-      pip install -r requirements.txt
+      pip install -r req.txt
     startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: MODEL_FILE
