@@ -3,7 +3,7 @@ services:
     name: predictive-administrative-calendar
     repo: https://github.com/Tejas1663/Predictive_Administrative_Calander
     branch: main
-    env: python
+    env: python-3.11.12
     plan: free
     buildCommand: |
       git lfs install || true
