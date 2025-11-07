@@ -7,7 +7,7 @@ xgboost==1.7.6
 catboost==1.2.2
 joblib
 requests
-python-dotenv
+python-3.11.12
 Flask-Login
 Flask-SQLAlchemy
 Flask-WTF
